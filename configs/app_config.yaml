@@ -1,0 +1,76 @@
+# ==============================================================================
+# Taxi Demand Heatmap Generation - Central Project Configuration
+# ==============================================================================
+
+app:
+  name: "Taxi Demand Heatmap Generation"
+  environment: "development"
+  log_level: "INFO"
+
+# Hardware Constraints (Tailored for 8 GB RAM Developer Laptop)
+system:
+  total_system_ram_mb: 8192
+  max_container_ram_mb: 2560
+  max_batch_memory_mb: 512
+
+# File Paths and Storage Locations
+storage:
+  raw_dir: "data/raw"
+  sample_dir: "data/sample"
+  geo_dir: "data/geo"
+  processed_dir: "data/processed"
+  lookup_csv: "data/geo/taxi_zone_lookup.csv"
+  zones_geojson: "data/geo/nyc_taxi_zones.geojson"
+  historical_baseline_csv: "data/processed/historical_baseline.csv"
+
+# Dataset Download Settings
+dataset:
+  # Official NYC TLC Parquet dataset (Jan 2024 as canonical reference)
+  trip_records_url: "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet"
+  zone_lookup_url: "https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv"
+  # Official NYC TLC taxi zone shapefile archive
+  zone_shapefile_url: "https://d37ci6vzurychx.cloudfront.net/misc/taxi_zones.zip"
+  sample_size_rows: 100000
+  random_seed: 42
+
+# Apache Kafka Streaming Configuration (KRaft Mode)
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topic_name: "taxi-trip-starts"
+  consumer_group: "taxi-demand-group"
+  producer_batch_size: 50
+  stream_delay_seconds: 0.1
+  # Micro-aggregation rolling window in minutes
+  rolling_window_minutes: 15
+
+# Hadoop HDFS & MapReduce Configuration
+hadoop:
+  container_name: "hadoop-single-node"
+  namenode_host: "localhost"
+  namenode_ipc_port: 9000
+  namenode_web_port: 9870
+  resourcemanager_web_port: 8088
+  hdfs_raw_dir: "/taxi/historical/raw"
+  hdfs_baseline_dir: "/taxi/historical/baseline"
+  streaming_jar: "/opt/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.3.6.jar"
+
+# Analytics & Surge Computation
+analytics:
+  # Minimum baseline pickups required to avoid division-by-zero bias
+  smoothing_epsilon: 1.0
+  # Surge ratio classification thresholds
+  surge_threshold_high: 1.5
+  surge_threshold_moderate: 1.2
+  top_n_rank_count: 10
+
+# Plotly Dash Web Application
+dashboard:
+  host: "127.0.0.1"
+  port: 8050
+  debug_mode: false
+  # Mandatory 10-minute auto-refresh interval: 10 * 60 * 1000 = 600,000 ms
+  refresh_interval_ms: 600000
+  map_center:
+    lat: 40.730610
+    lon: -73.935242
+  map_zoom: 10
